@@ -1065,14 +1065,14 @@ class BetterPlayerController {
         (await videoPlayerController!.isPictureInPictureSupported()) ?? false;
 
     if (isPipSupported) {
-      _wasInFullScreenBeforePiP = _isFullScreen;
+      if (_isFullScreen) exitFullScreen();
       _wasControlsEnabledBeforePiP = _controlsEnabled;
       setControlsEnabled(false);
       if (Platform.isAndroid) {
-        _wasInFullScreenBeforePiP = _isFullScreen;
+        _wasInFullScreenBeforePiP = false;
         await videoPlayerController?.enablePictureInPicture(
             left: 0, top: 0, width: 0, height: 0);
-        enterFullScreen();
+        // enterFullScreen();
         _postEvent(BetterPlayerEvent(BetterPlayerEventType.pipStart));
         return;
       }
