@@ -99,6 +99,7 @@ bool _remoteCommandsInitialized = false;
                                                                textureId]
                                          binaryMessenger:_messenger];
     [player setMixWithOthers:false];
+    [player canStartPictureInPictureAutomaticallyFromInline:true];
     [eventChannel setStreamHandler:player];
     player.eventChannel = eventChannel;
     _players[@(textureId)] = player;
