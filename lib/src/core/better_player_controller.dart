@@ -1057,6 +1057,7 @@ class BetterPlayerController {
   ///to open PiP mode in iOS. When device is not supported, PiP mode won't be
   ///open.
   Future<void>? enablePictureInPicture(GlobalKey betterPlayerGlobalKey) async {
+    if (_wasInPipMode) return;
     if (videoPlayerController == null) {
       throw StateError("The data source has not been initialized");
     }
@@ -1066,7 +1067,7 @@ class BetterPlayerController {
 
     if (isPipSupported) {
       if (_isFullScreen) exitFullScreen();
-      _wasControlsEnabledBeforePiP = _controlsEnabled;
+      _wasControlsEnabledBeforePiP = true;
       setControlsEnabled(false);
       if (Platform.isAndroid) {
         _wasInFullScreenBeforePiP = false;
@@ -1105,6 +1106,7 @@ class BetterPlayerController {
 
   ///Disable Picture in Picture mode if it's enabled.
   Future<void>? disablePictureInPicture() {
+    if (!_wasInPipMode) return null;
     if (videoPlayerController == null) {
       throw StateError("The data source has not been initialized");
     }
