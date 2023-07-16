@@ -433,12 +433,16 @@ bool _remoteCommandsInitialized = false;
 
             [player setTrackParameters:width: height : bitrate];
             result(nil);
-        } else if ([@"enablePictureInPicture" isEqualToString:call.method]){
+        } else if ([@"enablePictureInPicture" isEqualToString:call.method]) {
             double left = [argsMap[@"left"] doubleValue];
             double top = [argsMap[@"top"] doubleValue];
             double width = [argsMap[@"width"] doubleValue];
             double height = [argsMap[@"height"] doubleValue];
-            [player enablePictureInPicture:CGRectMake(left, top, width, height)];
+            if (width == 0) {
+                [player setPictureInPicture:true];
+            } else {
+                [player initPipController:CGRectMake(left, top, width, height)];
+            }
         } else if ([@"isPictureInPictureSupported" isEqualToString:call.method]){
             if (@available(iOS 9.0, *)){
                 if ([AVPictureInPictureController isPictureInPictureSupported]){
@@ -449,7 +453,6 @@ bool _remoteCommandsInitialized = false;
 
             result([NSNumber numberWithBool:false]);
         } else if ([@"disablePictureInPicture" isEqualToString:call.method]){
-            [player disablePictureInPicture];
             [player setPictureInPicture:false];
         } else if ([@"setAudioTrack" isEqualToString:call.method]){
             NSString* name = argsMap[@"name"];

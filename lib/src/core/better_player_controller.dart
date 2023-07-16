@@ -1072,22 +1072,39 @@ class BetterPlayerController {
     if (videoPlayerController == null) {
       throw StateError("The data source has not been initialized");
     }
+    final bool isPipSupported =
+        (await videoPlayerController!.isPictureInPictureSupported()) ?? false;
+
+    if (isPipSupported) {
+      if (Platform.isIOS || Platform.isAndroid) {
+        _wasInFullScreenBeforePiP = false;
+        _wasControlsEnabledBeforePiP = true;
+        setControlsEnabled(false);
+        _postEvent(BetterPlayerEvent(BetterPlayerEventType.pipStart));
+        videoPlayerController?.enablePictureInPicture(
+            left: 0, top: 0, width: 0, height: 0);
+      } else {
+        BetterPlayerUtils.log("Unsupported PiP in current platform.");
+      }
+    } else {
+      BetterPlayerUtils.log(
+          "Picture in picture is not supported in this device. If you're "
+          "using Android, please check if you're using activity v2 "
+          "embedding.");
+    }
+  }
+
+  Future<void>? initPictureInPicture(GlobalKey betterPlayerGlobalKey) async {
+    if (videoPlayerController == null) {
+      throw StateError("The data source has not been initialized");
+    }
 
     final bool isPipSupported =
         (await videoPlayerController!.isPictureInPictureSupported()) ?? false;
 
     if (isPipSupported) {
-      if (_isFullScreen) exitFullScreen();
-      _wasInFullScreenBeforePiP = false;
-      _wasControlsEnabledBeforePiP = _controlsEnabled;
-      setControlsEnabled(false);
-      if (Platform.isAndroid) {
-        await videoPlayerController?.enablePictureInPicture(
-            left: 0, top: 0, width: 0, height: 0);
-        _postEvent(BetterPlayerEvent(BetterPlayerEventType.pipStart));
-        return;
-      }
       if (Platform.isIOS) {
+        setControlsEnabled(true);
         final RenderBox? renderBox = betterPlayerGlobalKey.currentContext!
             .findRenderObject() as RenderBox?;
         if (renderBox == null) {
@@ -1097,14 +1114,14 @@ class BetterPlayerController {
           return;
         }
         final Offset position = renderBox.localToGlobal(Offset.zero);
-        return videoPlayerController?.enablePictureInPicture(
+        videoPlayerController?.enablePictureInPicture(
           left: position.dx,
           top: position.dy,
           width: renderBox.size.width,
           height: renderBox.size.height,
         );
-      } else {
-        BetterPlayerUtils.log("Unsupported PiP in current platform.");
+        BetterPlayerUtils.log("initPictureInPicture!!!");
+        return;
       }
     } else {
       BetterPlayerUtils.log(
