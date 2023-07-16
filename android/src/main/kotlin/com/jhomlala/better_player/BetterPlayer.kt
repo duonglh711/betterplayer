@@ -237,7 +237,7 @@ internal class BetterPlayer(
                 player: Player,
                 callback: BitmapCallback
             ): Bitmap? {
-                if (imageUrl == null) {
+                if (imageUrl.isNullOrEmpty()) {
                     return null
                 }
                 if (bitmap != null) {
@@ -379,15 +379,10 @@ internal class BetterPlayer(
         cacheKey: String?,
         context: Context
     ): MediaSource {
-        val type: Int
-        if (formatHint == null) {
-            var lastPathSegment = uri.lastPathSegment
-            if (lastPathSegment == null) {
-                lastPathSegment = ""
-            }
-            type = Util.inferContentTypeForExtension(lastPathSegment)
+        val type = if (formatHint == null) {
+            Util.inferContentType(uri)
         } else {
-            type = when (formatHint) {
+            when (formatHint) {
                 FORMAT_SS -> C.CONTENT_TYPE_SS
                 FORMAT_DASH -> C.CONTENT_TYPE_DASH
                 FORMAT_HLS -> C.CONTENT_TYPE_HLS
@@ -631,12 +626,6 @@ internal class BetterPlayer(
                 PendingIntent.FLAG_IMMUTABLE
             )
             val mediaSession = MediaSessionCompat(context, TAG, null, pendingIntent)
-            mediaSession.setCallback(object : MediaSessionCompat.Callback() {
-                override fun onSeekTo(pos: Long) {
-                    sendSeekToEvent(pos)
-                    super.onSeekTo(pos)
-                }
-            })
             mediaSession.isActive = true
             val mediaSessionConnector = MediaSessionConnector(mediaSession)
             mediaSessionConnector.setPlayer(exoPlayer)
@@ -726,14 +715,6 @@ internal class BetterPlayer(
 
             trackSelector.setParameters(builder)
         }
-    }
-
-    private fun sendSeekToEvent(positionMs: Long) {
-        exoPlayer?.seekTo(positionMs)
-        val event: MutableMap<String, Any> = HashMap()
-        event["event"] = "seek"
-        event["position"] = positionMs
-        eventSink.success(event)
     }
 
     fun setMixWithOthers(mixWithOthers: Boolean) {

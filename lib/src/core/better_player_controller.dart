@@ -46,9 +46,18 @@ class BetterPlayerController {
   ///Controls configuration
   late BetterPlayerControlsConfiguration _betterPlayerControlsConfiguration;
 
+  ///Controls configuration, if null then the normal configuration will be used
+  late BetterPlayerControlsConfiguration?
+      _betterPlayerControlsConfigurationFullScreen;
+
   ///Controls configuration
   BetterPlayerControlsConfiguration get betterPlayerControlsConfiguration =>
       _betterPlayerControlsConfiguration;
+
+  ///Controls configuration For FullScreen
+  BetterPlayerControlsConfiguration?
+      get betterPlayerControlsConfigurationFullScreen =>
+          _betterPlayerControlsConfigurationFullScreen;
 
   ///Expose all active eventListeners
   List<Function(BetterPlayerEvent)?> get eventListeners =>
@@ -218,6 +227,8 @@ class BetterPlayerController {
   }) {
     this._betterPlayerControlsConfiguration =
         betterPlayerConfiguration.controlsConfiguration;
+    this._betterPlayerControlsConfigurationFullScreen =
+        betterPlayerConfiguration.controlsConfigurationFullScreen;
     _eventListeners.add(eventListener);
     if (betterPlayerDataSource != null) {
       setupDataSource(betterPlayerDataSource);
@@ -589,6 +600,7 @@ class BetterPlayerController {
 
   ///Enables full screen mode in player. This will trigger route change.
   void enterFullScreen() {
+    if (_isFullScreen) return;
     _isFullScreen = true;
     _postControllerEvent(BetterPlayerControllerEvent.openFullscreen);
   }
@@ -1057,7 +1069,6 @@ class BetterPlayerController {
   ///to open PiP mode in iOS. When device is not supported, PiP mode won't be
   ///open.
   Future<void>? enablePictureInPicture(GlobalKey betterPlayerGlobalKey) async {
-    if (_wasInPipMode) return;
     if (videoPlayerController == null) {
       throw StateError("The data source has not been initialized");
     }
@@ -1066,14 +1077,14 @@ class BetterPlayerController {
         (await videoPlayerController!.isPictureInPictureSupported()) ?? false;
 
     if (isPipSupported) {
-      if (_isFullScreen) exitFullScreen();
-      _wasControlsEnabledBeforePiP = true;
+      _wasInFullScreenBeforePiP = _isFullScreen;
+      _wasControlsEnabledBeforePiP = _controlsEnabled;
       setControlsEnabled(false);
       if (Platform.isAndroid) {
-        _wasInFullScreenBeforePiP = false;
+        _wasInFullScreenBeforePiP = _isFullScreen;
         await videoPlayerController?.enablePictureInPicture(
             left: 0, top: 0, width: 0, height: 0);
-        // enterFullScreen();
+        enterFullScreen();
         _postEvent(BetterPlayerEvent(BetterPlayerEventType.pipStart));
         return;
       }
@@ -1106,7 +1117,6 @@ class BetterPlayerController {
 
   ///Disable Picture in Picture mode if it's enabled.
   Future<void>? disablePictureInPicture() {
-    if (!_wasInPipMode) return null;
     if (videoPlayerController == null) {
       throw StateError("The data source has not been initialized");
     }
