@@ -406,7 +406,7 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
             _player.rate = _playerRate;
         }
     } else {
-        [_player pause];
+        // [_player pause];
     }
 #ifdef BETTER_PLAYER_FLUTTER_TEXTURE
     _displayLink.paused = !_isPlaying;
